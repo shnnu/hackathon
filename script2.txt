@@ -1,0 +1,27 @@
+#!/bin/bash
+
+batch=b15
+hackathon=h
+code=test
+user_file_path=user_details/users_$(date +"%s").txt
+
+for i in {01..07}
+do
+echo $i
+
+
+password=$(pwgen 8 1) 
+
+adduser --ingroup $batch --conf /root/chatbot_setup.conf --home /home/$batch/$batch$hackathon$code$i --disabled-password --gecos "$batch $hackathon $code $i" $batch$hackathon$code$i
+
+su - $batch$hackathon$code$i -c "cd "
+su - $batch$hackathon$code$i -c "virtualenv --system-site-packages -p python2 venv"
+
+
+echo $batch$hackathon$code$i:$password | chpasswd
+
+echo "$batch$hackathon$code$i     $password" >> $user_file_path
+
+
+
+done

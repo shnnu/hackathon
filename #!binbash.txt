@@ -1,0 +1,45 @@
+#!/bin/bash
+    
+port=8104
+batch=b21
+hackathon=h4
+code=test
+user_file_path=user_details/users_$(date +"%s").txt
+nginx_file_path=nginx/nginx_$(date +"%s").conf
+
+face_reco_path=/root/facereco_setup.conf
+audio_reco_path=/root/audioreco_setup.conf
+
+for i in {04..04}
+do                                              
+echo $i
+echo $port
+password=$(pwgen 8  1)
+
+adduser --ingroup $batch --conf $audio_reco_path --home /home/$batch/$batch$hackathon$code$i --disabled-password --gecos "$batch $hackathon $code $i" $batch$hackathon$code$i
+
+su - $batch$hackathon$code$i -c "cd "
+su - $batch$hackathon$code$i -c "virtualenv --system-site-packages -p python3 venv"
+
+kill $(lsof -t -i:$port)
+
+su - $batch$hackathon$code$i -c "echo -e '#!/bin/bash \nkill \044(lsof -t -i:$port) \npython app/manage.py runserver 0.0.0.0:$port' > runserver.sh"
+
+echo $batch$hackathon$code$i:$password | chpasswd
+
+echo "$batch$hackathon$code$i     $password     $port" >> $user_file_path
+
+echo "location ~* /$batch$hackathon$code$i {
+                    proxy_pass http://127.0.0.1:$port;
+                    proxy_set_header Host \$host;
+                    proxy_set_header X-Real-IP \$remote_addr;
+                    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                }
+		" >> $nginx_file_path
+
+port=$((port+1))
+
+done
+
+
+#cat nginx/nginx_1596184236.conf >> /etc/nginx/facereco.conf
